@@ -2,16 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("lalascar-token")?.value;
-  console.log("Token:", token);
-
-  const publicRoutes = ["/login"];
   const pathname = request.nextUrl.pathname;
 
-  if (token && publicRoutes.includes(pathname)) {
+  const publicRoutes = ["/login", "/forgot-password", "/otp"];
+  const isPublicRoute = publicRoutes.includes(pathname);
+  const isPublicAsset = pathname.startsWith("/images") || pathname.startsWith("/public");
+
+  console.log("Token:", token, "Pathname:", pathname);
+
+  if (isPublicAsset) {
+    return NextResponse.next();
+  }
+
+  if (token && isPublicRoute) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  if (!token && !publicRoutes.includes(pathname)) {
+  if (!token && !isPublicRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
