@@ -1,4 +1,5 @@
 "use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,9 +15,12 @@ import { Button } from "../button";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader } from "lucide-react";
 import { setCookie } from "cookies-next";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import axiosFunction, { axiosReturnType } from "@/utils/axiosFunction";
+import { AxiosError } from "axios";
 
 const LoginForm = () => {
   const router = useRouter();
@@ -49,11 +53,55 @@ const LoginForm = () => {
       password: "",
     },
   });
+
+  const authenticateUserMutation = useMutation<
+    axiosReturnType,
+    AxiosError,
+    z.infer<typeof FormSchema>
+  >({
+    mutationFn: (credentials) => {
+      return axiosFunction({
+        urlPath: "/users/login",
+        data: {
+          username: credentials.username,
+          password: credentials.password,
+        },
+        method: "POST",
+        isServer: true,
+      });
+    },
+    onSuccess: (data) => {
+      toast.success("Login Successfully!");
+      setCookie(
+        "lalascar-token",
+        data.payload.user_info.bearer_token as string,
+        { secure: false }
+      );
+      setCookie("menus", JSON.stringify(data.payload.menu), { secure: false });
+      setCookie(
+        "userInfo",
+        JSON.stringify({
+          email: data.payload.user_info.email,
+          fullname: data.payload.user_info.fullname,
+          image: data.payload.user_info.image,
+          phone: data.payload.user_info.phone,
+          user_id: data.payload.user_info.id,
+        }),
+        { secure: false }
+      );
+      router.push("/");
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || "Something went wrong!";
+      toast.error(message);
+      console.log("Mutation error:", error);
+    },
+  });
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast.success("Login Successfully!");
-    // console.log(data);
-    setCookie("lalascar-token", data.username, { maxAge: 60 * 60 * 24 * 30 });
-    router.push("/");
+    authenticateUserMutation.mutate(data);
+    // setCookie("lalascar-token", data.username, { maxAge: 60 * 60 * 24 * 30 });
+    // router.push("/");
   }
   return (
     <>
@@ -106,8 +154,19 @@ const LoginForm = () => {
             </Link>
           </div>
 
-          <Button variant="primary" size="lg" className="w-full" type="submit">
+          <Button
+            variant={`${
+              authenticateUserMutation.isPending ? "secondary" : "primary"
+            }`}
+            size="lg"
+            className="md:w-max w-full disabled:cursor-not-allowed"
+            type="submit"
+            disabled={authenticateUserMutation.isPending}
+          >
             Sign in
+            {authenticateUserMutation.isPending && (
+              <Loader className="animate-spin ml-2" />
+            )}
           </Button>
         </form>
       </Form>

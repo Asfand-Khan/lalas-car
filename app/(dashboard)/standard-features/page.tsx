@@ -13,7 +13,6 @@ import {
 import Loader from "@/components/ui/global/Loader";
 import SubNav from "@/components/ui/global/SubNav";
 import axiosFunction from "@/utils/axiosFunction";
-import getPageRights from "@/utils/getPageRights";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit, MoreHorizontal, Plus, Trash } from "lucide-react";
@@ -21,30 +20,32 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import * as XLSX from "xlsx";
 
-interface AfterMarketAccessory {
+interface StandardFeature {
   id: number;
   label: string;
+  created_at: string;
+  updated_at: string;
 }
 
-interface AfterMarketAccessoriesResponse {
+interface StandardFeaturesResponse {
   status: string;
   message: string;
-  payload: AfterMarketAccessory[];
+  payload: StandardFeature[];
 }
 
-const fetchAftermarketAccessories =
-  async (): Promise<AfterMarketAccessoriesResponse | null> => {
+const fetchStandardFeatures =
+  async (): Promise<StandardFeaturesResponse | null> => {
     try {
       const response = await axiosFunction({
-        urlPath: "/aftermarket-accessories",
+        urlPath: "/standard-features",
       });
       return response;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error("Error fetching aftermarket accessories:", error.message);
+        console.error("Error fetching standard features:", error.message);
       } else {
         console.error(
-          "Unknown error occurred while fetching aftermarket accessories:",
+          "Unknown error occurred while fetching standard features:",
           error
         );
       }
@@ -54,49 +55,46 @@ const fetchAftermarketAccessories =
 
 const Page = () => {
   const router = useRouter();
+
   const {
-    data: aftermarketAccessoriesResponse,
-    isLoading: aftermarketAccessoriesLoading,
-  } = useQuery<AfterMarketAccessoriesResponse | null>({
-    queryKey: ["aftermarket-accessories"],
-    queryFn: fetchAftermarketAccessories,
+    data: standardFeaturesResponse,
+    isLoading: standardFeaturesLoading,
+  } = useQuery<StandardFeaturesResponse | null>({
+    queryKey: ["standard-features"],
+    queryFn: fetchStandardFeatures,
   });
 
-  if (aftermarketAccessoriesLoading) {
+  if (standardFeaturesLoading) {
     return <Loader />;
   }
 
   return (
     <>
       <SubNav
-        title="Aftermarket Accessories"
+        title="Standard Features"
         showDatePicker={false}
         showDataTableFilters={false}
       />
       <Card className="w-full shadow-none border-0">
         <CardHeader className="border-b py-4">
           <CardTitle className="tracking-tight text-lg font-semibold flex justify-between items-center">
-            <span>Explore your aftermarket accessories</span>
-            {/* {rights?.can_create === true && ( */}
-            <>
-              <div>
-                <Button
-                  variant="primary"
-                  className="text-left py-1"
-                  onClick={() => router.push(`/aftermarket-accessories/add`)}
-                >
-                  Add Aftermarket Accessory
-                  <Plus className="ml-1 h-4 w-4" size={20} />
-                </Button>
-              </div>
-            </>
-            {/* )} */}
+            <span>Explore your standard features</span>
+            <div>
+              <Button
+                variant="primary"
+                className="text-left py-1"
+                onClick={() => router.push(`/standard-features/add`)}
+              >
+                Add Standard Feature
+                <Plus className="ml-1 h-4 w-4" size={20} />
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {aftermarketAccessoriesResponse &&
-          aftermarketAccessoriesResponse.status === "1" &&
-          aftermarketAccessoriesResponse.payload.length > 0 ? (
+          {standardFeaturesResponse &&
+          standardFeaturesResponse.status === "1" &&
+          standardFeaturesResponse.payload.length > 0 ? (
             <>
               <DataTable
                 columns={
@@ -131,9 +129,7 @@ const Page = () => {
                                 <DropdownMenuItem
                                   onClick={() => {
                                     console.log("Edit: ", record);
-                                    router.push(
-                                      `/aftermarket-accessories/${record.id}`
-                                    );
+                                    router.push(`/standard-features/${record.id}`)
                                   }}
                                 >
                                   <Edit className="mr-2 h-4 w-4" />
@@ -154,24 +150,24 @@ const Page = () => {
                         );
                       },
                     },
-                  ] as ColumnDef<AfterMarketAccessory>[]
+                  ] as ColumnDef<StandardFeature>[]
                 }
-                data={aftermarketAccessoriesResponse.payload}
+                data={standardFeaturesResponse.payload}
                 exportConfig={{
                   excel: {
                     enabled: true,
-                    fileName: "aftermarket-accessories.xlsx",
+                    fileName: "standard-features.xlsx",
 
                     exportFunction: (data) => {
                       const ws = XLSX.utils.json_to_sheet(data);
                       const wb = XLSX.utils.book_new();
                       XLSX.utils.book_append_sheet(wb, ws, "Data");
-                      XLSX.writeFile(wb, "aftermarket-accessories.xlsx");
+                      XLSX.writeFile(wb, "standard-features.xlsx");
                     },
                   },
                   csv: {
                     enabled: true,
-                    fileName: "aftermarket-accessories.csv",
+                    fileName: "standard-features.csv",
                     exportFunction: (data) => {
                       const ws = XLSX.utils.json_to_sheet(data);
                       const csv = XLSX.utils.sheet_to_csv(ws);
@@ -184,7 +180,7 @@ const Page = () => {
                         link.setAttribute("href", url);
                         link.setAttribute(
                           "download",
-                          "aftermarket-accessories.csv"
+                          "standard-features.csv"
                         );
                         link.style.visibility = "hidden";
                         document.body.appendChild(link);

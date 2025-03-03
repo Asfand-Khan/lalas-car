@@ -4,7 +4,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("lalascar-token")?.value;
   console.log("Token:", token);
 
-  const publicRoutes = ["/login", "/forgot-password", "/otp"];
+  const publicRoutes = ["/login"];
   const pathname = request.nextUrl.pathname;
 
   if (token && publicRoutes.includes(pathname)) {

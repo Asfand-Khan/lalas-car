@@ -1,3 +1,20 @@
 {
   "extends": ["next/core-web-vitals", "next/typescript"]
 }
+
+
+// {
+//   "env": {
+//     "browser": true,
+//     "node": true
+//   },
+//   "extends": [
+//     "next/core-web-vitals",
+//     "plugin:@typescript-eslint/recommended"
+//   ],
+//   "plugins": ["@typescript-eslint"],
+//   "rules": {
+//     "no-unused-vars": "off", // Disable base rule
+//     "@typescript-eslint/no-unused-vars": ["warn"] // Use TS-specific rule
+//   }
+// }

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Loader from "@/components/ui/global/Loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axiosFunction, { axiosReturnType } from "@/utils/axiosFunction";
@@ -10,14 +11,60 @@ import {
   AfterMarketAccessoriesType,
 } from "@/validations/afterMarketAccessoriesValidations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { Loader } from "lucide-react";
-import React from "react";
+import { Loader as LoaderIcon } from "lucide-react";
+import { useParams } from "next/navigation";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+interface AfterMarketAccessory {
+  id: number;
+  label: string;
+}
+
+interface AfterMarketAccessoriesResponse {
+  status: string;
+  message: string;
+  payload: AfterMarketAccessory;
+}
+
+const fetchSingleAftermarketAccessory = async (
+  id: number
+): Promise<AfterMarketAccessoriesResponse | null> => {
+  try {
+    const response = await axiosFunction({
+      urlPath: `/aftermarket-accessories/${id}`,
+    });
+    return response;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(
+        "Error fetching single aftermarket accessory:",
+        error.message
+      );
+    } else {
+      console.error(
+        "Unknown error occurred while fetching single aftermarket accessory:",
+        error
+      );
+    }
+    return null;
+  }
+};
+
 const Page = () => {
+  const { slug } = useParams();
+
+  const {
+    data: aftermarketAccessoryResponse,
+    isLoading: aftermarketAccessoryLoading,
+  } = useQuery<AfterMarketAccessoriesResponse | null>({
+    queryKey: ["aftermarket-accessory", slug],
+    queryFn: () => fetchSingleAftermarketAccessory(Number(slug)),
+  });
+
   const {
     register,
     handleSubmit,
@@ -25,21 +72,32 @@ const Page = () => {
     reset,
   } = useForm<AfterMarketAccessoriesType>({
     resolver: zodResolver(afterMarketAccessoriesSchema),
+    defaultValues: {
+      label: "",
+    },
   });
 
+  useEffect(() => {
+    if (aftermarketAccessoryResponse?.payload) {
+      reset({
+        label: aftermarketAccessoryResponse.payload.label || "",
+      });
+    }
+  }, [aftermarketAccessoryResponse, reset]);
+
   const queryClient = useQueryClient();
-  const addAfterMarketAccMutation = useMutation<
+  const updateAfterMarketAccMutation = useMutation<
     axiosReturnType,
     AxiosError,
     AfterMarketAccessoriesType
   >({
     mutationFn: (newAcc) => {
       return axiosFunction({
-        urlPath: "/aftermarket-accessories",
+        urlPath: `/aftermarket-accessories/${Number(slug)}`,
         data: {
           label: newAcc.label,
         },
-        method: "POST",
+        method: "PUT",
         isServer: true,
       });
     },
@@ -49,21 +107,28 @@ const Page = () => {
       console.log("Mutation error Aftermarket Accessories:", error);
     },
     onSuccess: () => {
-      reset();
-      toast.success("Aftermarket Accessories added successfully!");
+      reset({
+        label: "",
+      });
+      toast.success("Aftermarket Accessories updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["aftermarket-accessories"] });
     },
   });
 
   const onSubmit = (data: AfterMarketAccessoriesType) => {
     console.log(data);
-    addAfterMarketAccMutation.mutate(data);
+    updateAfterMarketAccMutation.mutate(data);
   };
+
+  if (aftermarketAccessoryLoading) {
+    return <Loader />;
+  }
+
   return (
     <Card className="w-full shadow-none border-0">
       <CardHeader className="border-b py-4">
         <CardTitle className="tracking-tight text-lg font-semibold flex justify-between items-center">
-          Add Aftermarket Accessory Setup
+          Edit Aftermarket Accessory Setup
         </CardTitle>
       </CardHeader>
       <CardContent className="w-full">
@@ -91,18 +156,15 @@ const Page = () => {
               </div>
 
               <Button
-                variant={`${
-                  addAfterMarketAccMutation.isPending ? "secondary" : "primary"
-                }`}
-                // variant={"primary"}
+                variant={updateAfterMarketAccMutation.isPending ? "secondary" : "primary"}
                 size="lg"
                 className="md:w-max w-full disabled:cursor-not-allowed"
                 type="submit"
-                disabled={addAfterMarketAccMutation.isPending}
+                disabled={updateAfterMarketAccMutation.isPending}
               >
                 Submit
-                {addAfterMarketAccMutation.isPending && (
-                  <Loader className="animate-spin ml-2" />
+                {updateAfterMarketAccMutation.isPending && (
+                  <LoaderIcon className="animate-spin ml-2" />
                 )}
               </Button>
             </div>

@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axiosFunction, { axiosReturnType } from "@/utils/axiosFunction";
 import {
-  afterMarketAccessoriesSchema,
-  AfterMarketAccessoriesType,
-} from "@/validations/afterMarketAccessoriesValidations";
+  standardFeaturesSchema,
+  StandardFeaturesType,
+} from "@/validations/standardFeaturesValidations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -23,21 +23,21 @@ const Page = () => {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<AfterMarketAccessoriesType>({
-    resolver: zodResolver(afterMarketAccessoriesSchema),
+  } = useForm<StandardFeaturesType>({
+    resolver: zodResolver(standardFeaturesSchema),
   });
 
   const queryClient = useQueryClient();
-  const addAfterMarketAccMutation = useMutation<
+  const addStandardFeatureMutation = useMutation<
     axiosReturnType,
     AxiosError,
-    AfterMarketAccessoriesType
+    StandardFeaturesType
   >({
-    mutationFn: (newAcc) => {
+    mutationFn: (newStandardFeature) => {
       return axiosFunction({
-        urlPath: "/aftermarket-accessories",
+        urlPath: "/standard-features",
         data: {
-          label: newAcc.label,
+          label: newStandardFeature.label,
         },
         method: "POST",
         isServer: true,
@@ -46,24 +46,25 @@ const Page = () => {
     onError: (error: any) => {
       const message = error?.response?.data?.message || "Something went wrong!";
       toast.error(message);
-      console.log("Mutation error Aftermarket Accessories:", error);
+      console.log("Mutation error Standard Features:", error);
     },
     onSuccess: () => {
       reset();
-      toast.success("Aftermarket Accessories added successfully!");
-      queryClient.invalidateQueries({ queryKey: ["aftermarket-accessories"] });
+      toast.success("Standard Features added successfully!");
+      queryClient.invalidateQueries({ queryKey: ["standard-features"] });
     },
   });
 
-  const onSubmit = (data: AfterMarketAccessoriesType) => {
+  const onSubmit = (data: StandardFeaturesType) => {
     console.log(data);
-    addAfterMarketAccMutation.mutate(data);
+    addStandardFeatureMutation.mutate(data);
   };
+
   return (
     <Card className="w-full shadow-none border-0">
       <CardHeader className="border-b py-4">
         <CardTitle className="tracking-tight text-lg font-semibold flex justify-between items-center">
-          Add Aftermarket Accessory Setup
+          Add Standard Feature Setup
         </CardTitle>
       </CardHeader>
       <CardContent className="w-full">
@@ -75,13 +76,13 @@ const Page = () => {
             <div className="space-y-6 lg:w-1/2 w-full">
               <div className="space-y-2">
                 <Label className="text-charcoal" htmlFor="label">
-                  Aftermarket Accessory Name
+                  Standard Feature Name
                   <span className="text-red-500"> *</span>
                 </Label>
                 <Input
                   {...register("label")}
                   type="text"
-                  placeholder="Enter aftermarket accessory name"
+                  placeholder="Enter standard feature name"
                   className="w-full"
                   id="label"
                 />
@@ -92,16 +93,16 @@ const Page = () => {
 
               <Button
                 variant={`${
-                  addAfterMarketAccMutation.isPending ? "secondary" : "primary"
+                  addStandardFeatureMutation.isPending ? "secondary" : "primary"
                 }`}
                 // variant={"primary"}
                 size="lg"
                 className="md:w-max w-full disabled:cursor-not-allowed"
                 type="submit"
-                disabled={addAfterMarketAccMutation.isPending}
+                disabled={addStandardFeatureMutation.isPending}
               >
                 Submit
-                {addAfterMarketAccMutation.isPending && (
+                {addStandardFeatureMutation.isPending && (
                   <Loader className="animate-spin ml-2" />
                 )}
               </Button>

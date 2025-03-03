@@ -5,10 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axiosFunction, { axiosReturnType } from "@/utils/axiosFunction";
-import {
-  afterMarketAccessoriesSchema,
-  AfterMarketAccessoriesType,
-} from "@/validations/afterMarketAccessoriesValidations";
+import { companiesSchema, CompanyType } from "@/validations/companiesValidations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -23,21 +20,21 @@ const Page = () => {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<AfterMarketAccessoriesType>({
-    resolver: zodResolver(afterMarketAccessoriesSchema),
+  } = useForm<CompanyType>({
+    resolver: zodResolver(companiesSchema),
   });
 
   const queryClient = useQueryClient();
-  const addAfterMarketAccMutation = useMutation<
+  const addCompanyMutation = useMutation<
     axiosReturnType,
     AxiosError,
-    AfterMarketAccessoriesType
+    CompanyType
   >({
-    mutationFn: (newAcc) => {
+    mutationFn: (newCompany) => {
       return axiosFunction({
-        urlPath: "/aftermarket-accessories",
+        urlPath: "/companies",
         data: {
-          label: newAcc.label,
+          name: newCompany.name,
         },
         method: "POST",
         isServer: true,
@@ -46,24 +43,24 @@ const Page = () => {
     onError: (error: any) => {
       const message = error?.response?.data?.message || "Something went wrong!";
       toast.error(message);
-      console.log("Mutation error Aftermarket Accessories:", error);
+      console.log("Mutation error Company:", error);
     },
     onSuccess: () => {
       reset();
-      toast.success("Aftermarket Accessories added successfully!");
-      queryClient.invalidateQueries({ queryKey: ["aftermarket-accessories"] });
+      toast.success("Company added successfully!");
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
     },
   });
 
-  const onSubmit = (data: AfterMarketAccessoriesType) => {
+  const onSubmit = (data: CompanyType) => {
     console.log(data);
-    addAfterMarketAccMutation.mutate(data);
+    addCompanyMutation.mutate(data);
   };
   return (
     <Card className="w-full shadow-none border-0">
       <CardHeader className="border-b py-4">
         <CardTitle className="tracking-tight text-lg font-semibold flex justify-between items-center">
-          Add Aftermarket Accessory Setup
+          Add Company Setup
         </CardTitle>
       </CardHeader>
       <CardContent className="w-full">
@@ -74,34 +71,34 @@ const Page = () => {
           >
             <div className="space-y-6 lg:w-1/2 w-full">
               <div className="space-y-2">
-                <Label className="text-charcoal" htmlFor="label">
-                  Aftermarket Accessory Name
+                <Label className="text-charcoal" htmlFor="name">
+                  Company Name
                   <span className="text-red-500"> *</span>
                 </Label>
                 <Input
-                  {...register("label")}
+                  {...register("name")}
                   type="text"
-                  placeholder="Enter aftermarket accessory name"
+                  placeholder="Enter company name"
                   className="w-full"
-                  id="label"
+                  id="name"
                 />
-                {errors.label && (
-                  <p className="text-red-500 text-xs">{errors.label.message}</p>
+                {errors.name && (
+                  <p className="text-red-500 text-xs">{errors.name.message}</p>
                 )}
               </div>
 
               <Button
                 variant={`${
-                  addAfterMarketAccMutation.isPending ? "secondary" : "primary"
+                    addCompanyMutation.isPending ? "secondary" : "primary"
                 }`}
                 // variant={"primary"}
                 size="lg"
                 className="md:w-max w-full disabled:cursor-not-allowed"
                 type="submit"
-                disabled={addAfterMarketAccMutation.isPending}
+                disabled={addCompanyMutation.isPending}
               >
                 Submit
-                {addAfterMarketAccMutation.isPending && (
+                {addCompanyMutation.isPending && (
                   <Loader className="animate-spin ml-2" />
                 )}
               </Button>

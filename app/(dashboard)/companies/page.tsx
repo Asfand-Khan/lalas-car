@@ -13,7 +13,6 @@ import {
 import Loader from "@/components/ui/global/Loader";
 import SubNav from "@/components/ui/global/SubNav";
 import axiosFunction from "@/utils/axiosFunction";
-import getPageRights from "@/utils/getPageRights";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit, MoreHorizontal, Plus, Trash } from "lucide-react";
@@ -21,30 +20,30 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import * as XLSX from "xlsx";
 
-interface AfterMarketAccessory {
+interface Company {
   id: number;
-  label: string;
+  name: string;
 }
 
-interface AfterMarketAccessoriesResponse {
+export interface CompanyResponse {
   status: string;
   message: string;
-  payload: AfterMarketAccessory[];
+  payload: Company[];
 }
 
-const fetchAftermarketAccessories =
-  async (): Promise<AfterMarketAccessoriesResponse | null> => {
+const fetchCompanies =
+  async (): Promise<CompanyResponse | null> => {
     try {
       const response = await axiosFunction({
-        urlPath: "/aftermarket-accessories",
+        urlPath: "/companies",
       });
       return response;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error("Error fetching aftermarket accessories:", error.message);
+        console.error("Error fetching companies:", error.message);
       } else {
         console.error(
-          "Unknown error occurred while fetching aftermarket accessories:",
+          "Unknown error occurred while fetching companies:",
           error
         );
       }
@@ -54,49 +53,46 @@ const fetchAftermarketAccessories =
 
 const Page = () => {
   const router = useRouter();
+
   const {
-    data: aftermarketAccessoriesResponse,
-    isLoading: aftermarketAccessoriesLoading,
-  } = useQuery<AfterMarketAccessoriesResponse | null>({
-    queryKey: ["aftermarket-accessories"],
-    queryFn: fetchAftermarketAccessories,
+    data: companiesResponse,
+    isLoading: companiesLoading,
+  } = useQuery<CompanyResponse | null>({
+    queryKey: ["companies"],
+    queryFn: fetchCompanies,
   });
 
-  if (aftermarketAccessoriesLoading) {
+  if (companiesLoading) {
     return <Loader />;
   }
 
   return (
     <>
       <SubNav
-        title="Aftermarket Accessories"
+        title="Companies"
         showDatePicker={false}
         showDataTableFilters={false}
       />
       <Card className="w-full shadow-none border-0">
         <CardHeader className="border-b py-4">
           <CardTitle className="tracking-tight text-lg font-semibold flex justify-between items-center">
-            <span>Explore your aftermarket accessories</span>
-            {/* {rights?.can_create === true && ( */}
-            <>
-              <div>
-                <Button
-                  variant="primary"
-                  className="text-left py-1"
-                  onClick={() => router.push(`/aftermarket-accessories/add`)}
-                >
-                  Add Aftermarket Accessory
-                  <Plus className="ml-1 h-4 w-4" size={20} />
-                </Button>
-              </div>
-            </>
-            {/* )} */}
+            <span>Explore your companies</span>
+            <div>
+              <Button
+                variant="primary"
+                className="text-left py-1"
+                onClick={() => router.push(`/companies/add`)}
+              >
+                Add Company
+                <Plus className="ml-1 h-4 w-4" size={20} />
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {aftermarketAccessoriesResponse &&
-          aftermarketAccessoriesResponse.status === "1" &&
-          aftermarketAccessoriesResponse.payload.length > 0 ? (
+          {companiesResponse &&
+          companiesResponse.status === "1" &&
+          companiesResponse.payload.length > 0 ? (
             <>
               <DataTable
                 columns={
@@ -106,8 +102,8 @@ const Page = () => {
                       header: "ID",
                     },
                     {
-                      accessorKey: "label",
-                      header: "Label",
+                      accessorKey: "name",
+                      header: "Name",
                     },
                     {
                       header: "Actions",
@@ -131,9 +127,7 @@ const Page = () => {
                                 <DropdownMenuItem
                                   onClick={() => {
                                     console.log("Edit: ", record);
-                                    router.push(
-                                      `/aftermarket-accessories/${record.id}`
-                                    );
+                                    // router.push(`/aftermarket-accessories/${record.id}`)
                                   }}
                                 >
                                   <Edit className="mr-2 h-4 w-4" />
@@ -154,24 +148,24 @@ const Page = () => {
                         );
                       },
                     },
-                  ] as ColumnDef<AfterMarketAccessory>[]
+                  ] as ColumnDef<Company>[]
                 }
-                data={aftermarketAccessoriesResponse.payload}
+                data={companiesResponse.payload}
                 exportConfig={{
                   excel: {
                     enabled: true,
-                    fileName: "aftermarket-accessories.xlsx",
+                    fileName: "companies.xlsx",
 
                     exportFunction: (data) => {
                       const ws = XLSX.utils.json_to_sheet(data);
                       const wb = XLSX.utils.book_new();
                       XLSX.utils.book_append_sheet(wb, ws, "Data");
-                      XLSX.writeFile(wb, "aftermarket-accessories.xlsx");
+                      XLSX.writeFile(wb, "companies.xlsx");
                     },
                   },
                   csv: {
                     enabled: true,
-                    fileName: "aftermarket-accessories.csv",
+                    fileName: "companies.csv",
                     exportFunction: (data) => {
                       const ws = XLSX.utils.json_to_sheet(data);
                       const csv = XLSX.utils.sheet_to_csv(ws);
@@ -184,7 +178,7 @@ const Page = () => {
                         link.setAttribute("href", url);
                         link.setAttribute(
                           "download",
-                          "aftermarket-accessories.csv"
+                          "companies.csv"
                         );
                         link.style.visibility = "hidden";
                         document.body.appendChild(link);

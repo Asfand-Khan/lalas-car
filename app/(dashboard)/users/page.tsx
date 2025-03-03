@@ -21,82 +21,86 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import * as XLSX from "xlsx";
 
-interface AfterMarketAccessory {
+// Define the type for each user in the 'payload' array
+interface User {
   id: number;
-  label: string;
+  fullname: string;
+  email: string;
+  username: string;
+  hashedPassword: string; // Hashed password as a string
+  phone: string;
+  image: string; // Filename or path to the image
+  created_at: string; // ISO 8601 date string
+  updated_at: string; // ISO 8601 date string
 }
 
-interface AfterMarketAccessoriesResponse {
-  status: string;
+// Define the type for the entire response
+interface UsersResponse {
+  status: string; // Could be "1" | "0" if it’s a success/failure flag
   message: string;
-  payload: AfterMarketAccessory[];
+  payload: User[];
 }
 
-const fetchAftermarketAccessories =
-  async (): Promise<AfterMarketAccessoriesResponse | null> => {
-    try {
-      const response = await axiosFunction({
-        urlPath: "/aftermarket-accessories",
-      });
-      return response;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error fetching aftermarket accessories:", error.message);
-      } else {
-        console.error(
-          "Unknown error occurred while fetching aftermarket accessories:",
-          error
-        );
-      }
-      return null;
+const fetchUsers = async (): Promise<UsersResponse | null> => {
+  try {
+    const response = await axiosFunction({
+      urlPath: "/users",
+    });
+    return response;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error fetching Users:", error.message);
+    } else {
+      console.error("Unknown error occurred while fetching Users:", error);
     }
-  };
+    return null;
+  }
+};
 
 const Page = () => {
   const router = useRouter();
-  const {
-    data: aftermarketAccessoriesResponse,
-    isLoading: aftermarketAccessoriesLoading,
-  } = useQuery<AfterMarketAccessoriesResponse | null>({
-    queryKey: ["aftermarket-accessories"],
-    queryFn: fetchAftermarketAccessories,
-  });
 
-  if (aftermarketAccessoriesLoading) {
+  const { data: usersResponse, isLoading: usersLoading } =
+    useQuery<UsersResponse | null>({
+      queryKey: ["users"],
+      queryFn: fetchUsers,
+    });
+
+  if (usersLoading) {
     return <Loader />;
   }
 
   return (
     <>
       <SubNav
-        title="Aftermarket Accessories"
+        title="Users"
         showDatePicker={false}
         showDataTableFilters={false}
       />
       <Card className="w-full shadow-none border-0">
         <CardHeader className="border-b py-4">
           <CardTitle className="tracking-tight text-lg font-semibold flex justify-between items-center">
-            <span>Explore your aftermarket accessories</span>
+            <span>Explore your users</span>
             {/* {rights?.can_create === true && ( */}
-            <>
-              <div>
-                <Button
-                  variant="primary"
-                  className="text-left py-1"
-                  onClick={() => router.push(`/aftermarket-accessories/add`)}
-                >
-                  Add Aftermarket Accessory
-                  <Plus className="ml-1 h-4 w-4" size={20} />
-                </Button>
-              </div>
-            </>
+              <>
+                <div>
+                  <Button
+                    variant="primary"
+                    className="text-left py-1"
+                    onClick={() => router.push(`/users/add`)}
+                  >
+                    Add User
+                    <Plus className="ml-1 h-4 w-4" size={20} />
+                  </Button>
+                </div>
+              </>
             {/* )} */}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {aftermarketAccessoriesResponse &&
-          aftermarketAccessoriesResponse.status === "1" &&
-          aftermarketAccessoriesResponse.payload.length > 0 ? (
+          {usersResponse &&
+          usersResponse.status === "1" &&
+          usersResponse.payload.length > 0 ? (
             <>
               <DataTable
                 columns={
@@ -106,8 +110,20 @@ const Page = () => {
                       header: "ID",
                     },
                     {
-                      accessorKey: "label",
-                      header: "Label",
+                      accessorKey: "fullname",
+                      header: "Fullname",
+                    },
+                    {
+                      accessorKey: "email",
+                      header: "Email",
+                    },
+                    {
+                      accessorKey: "username",
+                      header: "Username",
+                    },
+                    {
+                      accessorKey: "phone",
+                      header: "Phone",
                     },
                     {
                       header: "Actions",
@@ -131,9 +147,7 @@ const Page = () => {
                                 <DropdownMenuItem
                                   onClick={() => {
                                     console.log("Edit: ", record);
-                                    router.push(
-                                      `/aftermarket-accessories/${record.id}`
-                                    );
+                                    router.push(`/users/${record.id}`);
                                   }}
                                 >
                                   <Edit className="mr-2 h-4 w-4" />
@@ -154,24 +168,24 @@ const Page = () => {
                         );
                       },
                     },
-                  ] as ColumnDef<AfterMarketAccessory>[]
+                  ] as ColumnDef<User>[]
                 }
-                data={aftermarketAccessoriesResponse.payload}
+                data={usersResponse.payload}
                 exportConfig={{
                   excel: {
                     enabled: true,
-                    fileName: "aftermarket-accessories.xlsx",
+                    fileName: "users.xlsx",
 
                     exportFunction: (data) => {
                       const ws = XLSX.utils.json_to_sheet(data);
                       const wb = XLSX.utils.book_new();
                       XLSX.utils.book_append_sheet(wb, ws, "Data");
-                      XLSX.writeFile(wb, "aftermarket-accessories.xlsx");
+                      XLSX.writeFile(wb, "users.xlsx");
                     },
                   },
                   csv: {
                     enabled: true,
-                    fileName: "aftermarket-accessories.csv",
+                    fileName: "users.csv",
                     exportFunction: (data) => {
                       const ws = XLSX.utils.json_to_sheet(data);
                       const csv = XLSX.utils.sheet_to_csv(ws);
@@ -182,10 +196,7 @@ const Page = () => {
                       if (link.download !== undefined) {
                         const url = URL.createObjectURL(blob);
                         link.setAttribute("href", url);
-                        link.setAttribute(
-                          "download",
-                          "aftermarket-accessories.csv"
-                        );
+                        link.setAttribute("download", "users.csv");
                         link.style.visibility = "hidden";
                         document.body.appendChild(link);
                         link.click();

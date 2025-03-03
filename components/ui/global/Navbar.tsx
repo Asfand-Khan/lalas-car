@@ -1,15 +1,7 @@
 "use client";
-import { usePathname } from "next/navigation";
+
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { NavUser } from "./NavUser";
 
 const data = {
@@ -21,18 +13,18 @@ const data = {
 };
 
 const Navbar = () => {
-    const pathname = usePathname();
+    // const pathname = usePathname();
 
-    const formatPageName = (path: string) => {
-        const lastSegment = path.split("/").pop() || "";
-        return lastSegment
-            .split("-")
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-    };
+    // const formatPageName = (path: string) => {
+    //     const lastSegment = path.split("/").pop() || "";
+    //     return lastSegment
+    //         .split("-")
+    //         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    //         .join(" ");
+    // };
 
-    const pageName = formatPageName(pathname || "");
-    const isHomePage = pathname === "/";
+    // const pageName = formatPageName(pathname || "");
+    // const isHomePage = pathname === "/";
 
     return (
         <>
@@ -40,7 +32,7 @@ const Navbar = () => {
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="-ml-1" />
                     <Separator orientation="vertical" className="mr-2 h-4" />
-                    <Breadcrumb>
+                    {/* <Breadcrumb>
                         <BreadcrumbList>
                             <BreadcrumbItem className="hidden md:block">
                                 <BreadcrumbLink className="text-charcoal" href="/">
@@ -58,7 +50,7 @@ const Navbar = () => {
                             }
 
                         </BreadcrumbList>
-                    </Breadcrumb>
+                    </Breadcrumb> */}
                 </div>
                 <div>
                     <NavUser user={data.user} />

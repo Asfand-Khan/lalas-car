@@ -13,7 +13,6 @@ import {
 import Loader from "@/components/ui/global/Loader";
 import SubNav from "@/components/ui/global/SubNav";
 import axiosFunction from "@/utils/axiosFunction";
-import getPageRights from "@/utils/getPageRights";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit, MoreHorizontal, Plus, Trash } from "lucide-react";
@@ -21,30 +20,37 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import * as XLSX from "xlsx";
 
-interface AfterMarketAccessory {
-  id: number;
-  label: string;
+interface Company {
+  name: string;
 }
 
-interface AfterMarketAccessoriesResponse {
+interface Model {
+  id: number;
+  modelName: string;
+  company: Company;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ModelResponse {
   status: string;
   message: string;
-  payload: AfterMarketAccessory[];
+  payload: Model[];
 }
 
-const fetchAftermarketAccessories =
-  async (): Promise<AfterMarketAccessoriesResponse | null> => {
+const fetchModels =
+  async (): Promise<ModelResponse | null> => {
     try {
       const response = await axiosFunction({
-        urlPath: "/aftermarket-accessories",
+        urlPath: "/models",
       });
       return response;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error("Error fetching aftermarket accessories:", error.message);
+        console.error("Error fetching models:", error.message);
       } else {
         console.error(
-          "Unknown error occurred while fetching aftermarket accessories:",
+          "Unknown error occurred while fetching models:",
           error
         );
       }
@@ -54,49 +60,46 @@ const fetchAftermarketAccessories =
 
 const Page = () => {
   const router = useRouter();
+
   const {
-    data: aftermarketAccessoriesResponse,
-    isLoading: aftermarketAccessoriesLoading,
-  } = useQuery<AfterMarketAccessoriesResponse | null>({
-    queryKey: ["aftermarket-accessories"],
-    queryFn: fetchAftermarketAccessories,
+    data: modelsResponse,
+    isLoading: modelsLoading,
+  } = useQuery<ModelResponse | null>({
+    queryKey: ["models"],
+    queryFn: fetchModels,
   });
 
-  if (aftermarketAccessoriesLoading) {
+  if (modelsLoading) {
     return <Loader />;
   }
 
   return (
     <>
       <SubNav
-        title="Aftermarket Accessories"
+        title="Models"
         showDatePicker={false}
         showDataTableFilters={false}
       />
       <Card className="w-full shadow-none border-0">
         <CardHeader className="border-b py-4">
           <CardTitle className="tracking-tight text-lg font-semibold flex justify-between items-center">
-            <span>Explore your aftermarket accessories</span>
-            {/* {rights?.can_create === true && ( */}
-            <>
-              <div>
-                <Button
-                  variant="primary"
-                  className="text-left py-1"
-                  onClick={() => router.push(`/aftermarket-accessories/add`)}
-                >
-                  Add Aftermarket Accessory
-                  <Plus className="ml-1 h-4 w-4" size={20} />
-                </Button>
-              </div>
-            </>
-            {/* )} */}
+            <span>Explore your models</span>
+            <div>
+              <Button
+                variant="primary"
+                className="text-left py-1"
+                onClick={() => router.push(`/models/add`)}
+              >
+                Add Models
+                <Plus className="ml-1 h-4 w-4" size={20} />
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {aftermarketAccessoriesResponse &&
-          aftermarketAccessoriesResponse.status === "1" &&
-          aftermarketAccessoriesResponse.payload.length > 0 ? (
+          {modelsResponse &&
+          modelsResponse.status === "1" &&
+          modelsResponse.payload.length > 0 ? (
             <>
               <DataTable
                 columns={
@@ -106,8 +109,12 @@ const Page = () => {
                       header: "ID",
                     },
                     {
-                      accessorKey: "label",
-                      header: "Label",
+                      accessorKey: "modelName",
+                      header: "Model Name",
+                    },
+                    {
+                      accessorKey: "company.name",
+                      header: "Company Name",
                     },
                     {
                       header: "Actions",
@@ -131,9 +138,7 @@ const Page = () => {
                                 <DropdownMenuItem
                                   onClick={() => {
                                     console.log("Edit: ", record);
-                                    router.push(
-                                      `/aftermarket-accessories/${record.id}`
-                                    );
+                                    // router.push(`/aftermarket-accessories/${record.id}`)
                                   }}
                                 >
                                   <Edit className="mr-2 h-4 w-4" />
@@ -154,24 +159,24 @@ const Page = () => {
                         );
                       },
                     },
-                  ] as ColumnDef<AfterMarketAccessory>[]
+                  ] as ColumnDef<Model>[]
                 }
-                data={aftermarketAccessoriesResponse.payload}
+                data={modelsResponse.payload}
                 exportConfig={{
                   excel: {
                     enabled: true,
-                    fileName: "aftermarket-accessories.xlsx",
+                    fileName: "models.xlsx",
 
                     exportFunction: (data) => {
                       const ws = XLSX.utils.json_to_sheet(data);
                       const wb = XLSX.utils.book_new();
                       XLSX.utils.book_append_sheet(wb, ws, "Data");
-                      XLSX.writeFile(wb, "aftermarket-accessories.xlsx");
+                      XLSX.writeFile(wb, "models.xlsx");
                     },
                   },
                   csv: {
                     enabled: true,
-                    fileName: "aftermarket-accessories.csv",
+                    fileName: "models.csv",
                     exportFunction: (data) => {
                       const ws = XLSX.utils.json_to_sheet(data);
                       const csv = XLSX.utils.sheet_to_csv(ws);
@@ -184,7 +189,7 @@ const Page = () => {
                         link.setAttribute("href", url);
                         link.setAttribute(
                           "download",
-                          "aftermarket-accessories.csv"
+                          "models.csv"
                         );
                         link.style.visibility = "hidden";
                         document.body.appendChild(link);
